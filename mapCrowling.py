@@ -16,7 +16,7 @@ url = 'https://map.naver.com/v5/search'
 driver = webdriver.Chrome()  # 드라이버 경로
 # driver = webdriver.Chrome('./chromedriver',chrome_options=options) # 크롬창 숨기기
 driver.get(url)
-key_word = '파주시 야당동 주차장'  # 검색어
+key_word = '파주시 맛집'  # 검색어
 
 
 # css 찾을때 까지 10초대기
@@ -59,24 +59,24 @@ switch_frame('searchIframe')
 page_down(40)
 sleep(3)
 
-# 주차장 리스트
-parking_list = driver.find_elements(By.CSS_SELECTOR, 'li.VLTHu')
+# 식당 리스트
+restaurant_list = driver.find_elements(By.CSS_SELECTOR, 'li.UEzoS.rTjJo')
 # 페이지 리스트
 next_btn = driver.find_elements(By.CSS_SELECTOR, '.zRM9F> a')
 
 # dictionary 생성
-parking_dict = {'주차장정보': []}
+restaurant_dict = {'맛집정보': []}
 # 시작시간
 start = time.time()
 print('[크롤링 시작...]')
 
 # 크롤링 (페이지 리스트 만큼)
 for btn in range(len(next_btn))[1:]:  # next_btn[0] = 이전 페이지 버튼 무시 -> [1]부터 시작
-    parking_list = driver.find_elements(By.CSS_SELECTOR, 'li.VLTHu')
-    names = driver.find_elements(By.CSS_SELECTOR, '.YwYLL')  # (3) 장소명
-    types = driver.find_elements(By.CSS_SELECTOR, '.YzBgS')  # (4) 장소 유형
+    restaurant_list = driver.find_elements(By.CSS_SELECTOR, 'li.UEzoS.rTjJo')
+    names = driver.find_elements(By.CSS_SELECTOR, '.TYaxT')  # (3) 장소명
+    types = driver.find_elements(By.CSS_SELECTOR, '.KCMnt')  # (4) 장소 유형
 
-    for data in range(len(parking_list)):  # 주차장 리스트 만큼
+    for data in range(len(restaurant_list)):  # 시당 리스트 만큼
         print(data)
 
         sleep(1)
