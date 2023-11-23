@@ -76,22 +76,20 @@ for btn in range(len(next_btn))[1:]:  # next_btn[0] = 이전 페이지 버튼 �
     names = driver.find_elements(By.CSS_SELECTOR, '.TYaxT')  # (3) 장소명
     types = driver.find_elements(By.CSS_SELECTOR, '.KCMnt')  # (4) 장소 유형
 
-    for data in range(len(restaurant_list)):  # 시당 리스트 만큼
+    for data in range(len(restaurant_list)):  # 식당 리스트 만큼
         print(data)
-
-        sleep(1)
         try:
             # 지번, 도로명 초기화
             jibun_address = ''
             road_address = ''
 
-            # (3) 주차장명 가져오기
-            parking_name = names[data].text
-            print(parking_name)
+            # (3)식당명 가져오기
+            restaurant_name = names[data].text
+            print(restaurant_name)
 
             # (4) 유형
-            parking_type = types[data].text
-            print(parking_type)
+            restaurant_type = types[data].text
+            print(restaurant_type)
 
             # (5) 주소 버튼 누르기
             address_buttons = driver.find_elements(By.CSS_SELECTOR, '.Q8Zql > a')
