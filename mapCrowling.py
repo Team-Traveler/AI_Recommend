@@ -16,7 +16,7 @@ url = 'https://map.naver.com/v5/search'
 driver = webdriver.Chrome()  # 드라이버 경로
 # driver = webdriver.Chrome('./chromedriver',chrome_options=options) # 크롬창 숨기기
 driver.get(url)
-key_word = '파주시 맛집'  # 검색어
+key_word = '서울 맛집'  # 검색어
 
 
 # css 찾을때 까지 10초대기
@@ -72,9 +72,16 @@ print('[크롤링 시작...]')
 
 # 크롤링 (페이지 리스트 만큼)
 for btn in range(len(next_btn))[1:]:  # next_btn[0] = 이전 페이지 버튼 무시 -> [1]부터 시작
-    restaurant_list = driver.find_elements(By.CSS_SELECTOR, 'li.UEzoS.rTjJo')
-    names = driver.find_elements(By.CSS_SELECTOR, '.TYaxT')  # (3) 장소명
-    types = driver.find_elements(By.CSS_SELECTOR, '.KCMnt')  # (4) 장소 유형
+    # restaurant_list = driver.find_elements(By.CSS_SELECTOR, 'li.UEzoS.rTjJo')
+    # names = driver.find_elements(By.CSS_SELECTOR, '.TYaxT')  # (3) 장소명
+    # types = driver.find_elements(By.CSS_SELECTOR, '.KCMnt')  # (4) 장소 유형
+
+    names = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/a[1]/div/div/span[1]')
+    names += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/a[1]/div/div/span[1]')
+    addr = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/div/div/div')
+    addr += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/div/div/span/a/span[1]')
+    types = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/a[2]/div/div/span[1]')
+    types += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/a[2]/div/div/span[1]')
 
     for data in range(len(restaurant_list)):  # 식당 리스트 만큼
         print(data)
@@ -92,7 +99,7 @@ for btn in range(len(next_btn))[1:]:  # next_btn[0] = 이전 페이지 버튼 �
             print(restaurant_type)
 
             # (5) 주소 버튼 누르기
-            address_buttons = driver.find_elements(By.CSS_SELECTOR, '.Q8Zql > a')
+            address_buttons = driver.find_element_by_xpath(By.CSS_SELECTOR, '.Q8Zql > a')
             address_buttons.__getitem__(data).click()
 
             # 로딩 기다리기
