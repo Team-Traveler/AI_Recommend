@@ -71,116 +71,133 @@ start = time.time()
 print('[크롤링 시작...]')
 
 # 크롤링 (페이지 리스트 만큼)
-for btn in range(len(next_btn))[1:]:  # next_btn[0] = 이전 페이지 버튼 무시 -> [1]부터 시작
+# for btn in range(len(next_btn))[1:]:  # next_btn[0] = 이전 페이지 버튼 무시 -> [1]부터 시작
     # restaurant_list = driver.find_elements(By.CSS_SELECTOR, 'li.UEzoS.rTjJo')
     # names = driver.find_elements(By.CSS_SELECTOR, '.TYaxT')  # (3) 장소명
     # types = driver.find_elements(By.CSS_SELECTOR, '.KCMnt')  # (4) 장소 유형
 
+empty = '//*[@id="_pcmap_list_scroll_container"]' # 크롤링할 데이터가 있는 영역 중, 빈 공간을 입력해 뒀습니다
+
+for i in range(1, 51): # 1~50번째 상호를 순회하도록 했습니다
+    nm = ['NA'] # 상호가 저장될 변수
+    addr = ['NA'] # 주소가 저장될 변수
+    driver.find_element(By.XPATH, empty)
+
     names = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/a[1]/div/div/span[1]')
+#                                                                         /html/body/div[3]/div/div/div/div[2]/div[1]/div[1]/span[1]
+# /html/body/div[3]/div/div/div/div[2]/div[1]/div[1]/span[1]
     names += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/a[1]/div/div/span[1]')
+
     addr = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/div/div/div')
     addr += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/div/div/span/a/span[1]')
+
     types = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/a[2]/div/div/span[1]')
     types += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/a[2]/div/div/span[1]')
 
-    for data in range(len(restaurant_list)):  # 식당 리스트 만큼
-        print(data)
-        try:
-            # 지번, 도로명 초기화
-            jibun_address = ''
-            road_address = ''
-
-            # (3)식당명 가져오기
-            restaurant_name = names[data].text
-            print(restaurant_name)
-
-            # (4) 유형
-            restaurant_type = types[data].text
-            print(restaurant_type)
-
-            # (5) 주소 버튼 누르기
-            address_buttons = driver.find_element_by_xpath(By.CSS_SELECTOR, '.Q8Zql > a')
-            address_buttons.__getitem__(data).click()
-
-            # 로딩 기다리기
-            sleep(1)
-
-            # (6) 주소 눌렀을 때 도로명, 지번 나오는 div
-            addr = driver.find_elements(By.CSS_SELECTOR, '.jg1ED > div')
-
-            # 지번만 있는 경우
-            if len(addr) == 1 and addr.__getitem__(0).text[0:2] == '지번':
-                jibun = addr.__getitem__(0).text
-                last_index = jibun.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
-                jibun_address = jibun[2:last_index]
-                print("지번 주소:", jibun_address)
-
-            # 도로명만 있는 경우
-            elif len(addr) == 1 and addr.__getitem__(0).text[0:2] == '도로':
-                road = addr.__getitem__(0).text
-                last_index = road.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
-                road_address = road[3:last_index]
-                print("도로명 주소:", road_address)
-
-            # 도로명, 지번 둘 다 있는 경우
-            else:
-                # 도로명
-                road = addr.__getitem__(0).text
-                road_address = road[3:(len(road) - 2)]
-                print("도로명 주소:", road_address)
-
-                # 지번
-                jibun = addr.__getitem__(1).text
-                last_index = jibun.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
-                jibun_address = jibun[2:last_index]
-                print("지번 주소:", jibun_address)
-
-            # dict에 데이터 집어넣기
-            dict_temp = {
-                'name': parking_name,
-                'parking_type': parking_type,
-                'road_address': road_address,
-                'jibun_address': jibun_address
-            }
-
-            parking_dict['주차장정보'].append(dict_temp)
-            print(f'{parking_name} ...완료')
-
-            sleep(1)
-
-        except Exception as e:
-            print(e)
-            print('ERROR!' * 3)
-
-            # dict에 데이터 집어넣기
-            dict_temp = {
-                'name': parking_name,
-                'parking_type': parking_type,
-                'road_address': road_address,
-                'jibun_address': jibun_address
-            }
-
-            parking_dict['주차장정보'].append(dict_temp)
-            print(f'{parking_name} ...완료')
-
-            sleep(1)
+    # for data in range(len(restaurant_list)):  # 식당 리스트 만큼
+    #     print(data)
+    #     try:
+    #         # 지번, 도로명 초기화
+    #         jibun_address = ''
+    #         road_address = ''
+    #
+    #         # (3)식당명 가져오기
+    #         restaurant_name = names[data].text
+    #         print(restaurant_name)
+    #
+    #         # (4) 유형
+    #         restaurant_type = types[data].text
+    #         print(restaurant_type)
+    #
+    #         # (5) 주소 버튼 누르기
+    #         address_buttons = driver.find_element_by_xpath(By.CSS_SELECTOR, '.Q8Zql > a')
+    #         address_buttons.__getitem__(data).click()
+    #
+    #         # 로딩 기다리기
+    #         sleep(1)
+    #
+    #         # (6) 주소 눌렀을 때 도로명, 지번 나오는 div
+    #         addr = driver.find_elements(By.CSS_SELECTOR, '.jg1ED > div')
+    #
+    #         # 지번만 있는 경우
+    #         if len(addr) == 1 and addr.__getitem__(0).text[0:2] == '지번':
+    #             jibun = addr.__getitem__(0).text
+    #             last_index = jibun.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
+    #             jibun_address = jibun[2:last_index]
+    #             print("지번 주소:", jibun_address)
+    #
+    #         # 도로명만 있는 경우
+    #         elif len(addr) == 1 and addr.__getitem__(0).text[0:2] == '도로':
+    #             road = addr.__getitem__(0).text
+    #             last_index = road.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
+    #             road_address = road[3:last_index]
+    #             print("도로명 주소:", road_address)
+    #
+    #         # 도로명, 지번 둘 다 있는 경우
+    #         else:
+    #             # 도로명
+    #             road = addr.__getitem__(0).text
+    #             road_address = road[3:(len(road) - 2)]
+    #             print("도로명 주소:", road_address)
+    #
+    #             # 지번
+    #             jibun = addr.__getitem__(1).text
+    #             last_index = jibun.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
+    #             jibun_address = jibun[2:last_index]
+    #             print("지번 주소:", jibun_address)
+    #
+    #         # dict에 데이터 집어넣기
+    #         dict_temp = {
+    #             'name': parking_name,
+    #             'parking_type': parking_type,
+    #             'road_address': road_address,
+    #             'jibun_address': jibun_address
+    #         }
+    #
+    #         parking_dict['주차장정보'].append(dict_temp)
+    #         print(f'{parking_name} ...완료')
+    #
+    #         sleep(1)
+    #
+    #     except Exception as e:
+    #         print(e)
+    #         print('ERROR!' * 3)
+    #
+    #         # dict에 데이터 집어넣기
+    #         dict_temp = {
+    #             'name': parking_name,
+    #             'parking_type': parking_type,
+    #             'road_address': road_address,
+    #             'jibun_address': jibun_address
+    #         }
+    #
+    #         parking_dict['주차장정보'].append(dict_temp)
+    #         print(f'{parking_name} ...완료')
+    #
+    #         sleep(1)
 
     # 다음 페이지 버튼 누를 수 없으면 종료
-    if not next_btn[-1].is_enabled():
-        break
-
-    if names[-1]:  # 마지막 주차장일 경우 다음버튼 클릭
-        next_btn[-1].click()
-
-        sleep(2)
-
-    else:
-        print('페이지 인식 못함')
-        break
+    # if not next_btn[-1].is_enabled():
+    #     break
+    #
+    # if names[-1]:  # 마지막 주차장일 경우 다음버튼 클릭
+    #     next_btn[-1].click()
+    #
+    #     sleep(2)
+    #
+    # else:
+    #     print('페이지 인식 못함')
+    #     break
 
 print('[데이터 수집 완료]\n소요 시간 :', time.time() - start)
 driver.quit()  # 작업이 끝나면 창을 닫는다.
 
-# json 파일로 저장
-with open('data/store_data.json', 'w', encoding='utf-8') as f:
-    json.dump(parking_dict, f, indent=4, ensure_ascii=False)
+# # json 파일로 저장
+# with open('data/store_data.json', 'w', encoding='utf-8') as f:
+#     json.dump(parking_dict, f, indent=4, ensure_ascii=False)
+print('=================')
+print(names)
+print('=================')
+print(types)
+print('=================')
+print(addr)
