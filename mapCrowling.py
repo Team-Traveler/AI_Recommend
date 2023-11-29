@@ -1,203 +1,52 @@
-import json
-import time
-from time import sleep
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+import pandas as pd # 표 형식의 데이터를 다룰 수 있는 pandas를 pd라고 줄여서 불러옵니다
+from selenium import webdriver # 크롬 창을 조종하기 위한 모듈입니다
+from selenium.webdriver.common.by import By # 웹사이트의 구성요소를 선택하기 위해 By 모듈을 불려옵니다
+from selenium.webdriver.support.ui import WebDriverWait # 웹페이지가 전부 로드될때까지 기다리는 (Explicitly wait) 기능을 하는 모듈입니다
+from selenium.webdriver.support import expected_conditions as EC # 크롬의 어떤 부분의 상태를 확인하는 모듈입니다
+import time # 정해진 시간만큼 기다리게 하기 위한 패키지입니다
 
-# --크롬창을 숨기고 실행-- driver에 options를 추가해주면된다
-# options = webdriver.ChromeOptions()
-# options.add_argument('headless')
+search_keyword = '서울 맛집'
 
-url = 'https://map.naver.com/v5/search'
-driver = webdriver.Chrome()  # 드라이버 경로
-# driver = webdriver.Chrome('./chromedriver',chrome_options=options) # 크롬창 숨기기
-driver.get(url)
-key_word = '서울 맛집'  # 검색어
+# 창 숨기는 옵션 추가
+options = webdriver.ChromeOptions()
+options.add_argument("headless")
 
+driver = driver = webdriver.Chrome(options=options)
+driver.get(f"https://maps.google.com/search?sca_esv=586327572&tbs=lf:1,lf_ui:9&tbm=lcl&q={search_keyword}")
+try:
+    element = WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.CLASS_NAME, "SDkEP")))
+finally:
+    pass
 
-# css 찾을때 까지 10초대기
-def time_wait(num, code):
-    try:
-        wait = WebDriverWait(driver, num).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, code)))
-    except:
-        print(code, '태그를 찾지 못하였습니다.')
-        driver.quit()
-    return wait
+res = pd.DataFrame()
+empty = '#search'  # 크롤링할 데이터가 있는 영역 중, 빈 공간을 입력해 뒀습니다
 
+for i in range(10, 31):
+    nm = ['NA']
+    addr = ['NA']
+    score = ['NA']
 
-# frame 변경 메소드
-def switch_frame(frame):
-    driver.switch_to.default_content()  # frame 초기화
-    driver.switch_to.frame(frame)  # frame 변경
+    driver.find_element(By.CSS_SELECTOR, empty)
+    nm_elements = driver.find_elements(By.CSS_SELECTOR,
+                                        f'#tsuid_{i} > div.uMdZh.tIxNaf > div > div > a.vwVdIc.wzN8Ac.rllt__link.a-no-hover-decoration > div > div > div.dbg0pd > span')
 
+    driver.find_element(By.CSS_SELECTOR, empty)
+    addr_elements = driver.find_elements(By.CSS_SELECTOR,
+                                          f'#tsuid_{i} > div.uMdZh.tIxNaf > div > div > a.vwVdIc.wzN8Ac.rllt__link.a-no-hover-decoration > div > div > div:nth-child(3)')
 
-# 페이지 다운
-def page_down(num):
-    body = driver.find_element(By.CSS_SELECTOR, 'body')
-    body.click()
-    for i in range(num):
-        body.send_keys(Keys.PAGE_DOWN)
+    driver.find_element(By.CSS_SELECTOR, empty)
+    score_elements = driver.find_elements(By.CSS_SELECTOR,
+                                         f'#tsuid_{i} > div.uMdZh.tIxNaf > div > div > a.vwVdIc.wzN8Ac.rllt__link.a-no-hover-decoration > div > div > div:nth-child(2) > span > span > span.yi40Hd.YrbPuc')
 
+    if nm_elements != []:  # 이름이 비어있으면 아무것도 안하도록
+        nm = nm_elements[0].text
+        addr = addr_elements[0].text
+        score = score_elements[0].text
 
-# css를 찾을때 까지 10초 대기
-time_wait(10, 'div.input_box > input.input_search')
+        res = pd.concat([res, pd.DataFrame([nm, addr, score]).T])  # res 데이터프레임에 차곡차곡 쌓아줍니다
 
-# (1) 검색창 찾기
-search = driver.find_element(By.CSS_SELECTOR, 'div.input_box > input.input_search')
-search.send_keys(key_word)  # 검색어 입력
-search.send_keys(Keys.ENTER)  # 엔터버튼 누르기
+res.columns = ['name', 'addr', 'score']
+res = res.sort_values('score', ascending=False)
+print(res)
 
-sleep(1)
-
-# (2) frame 변경
-switch_frame('searchIframe')
-page_down(40)
-sleep(3)
-
-# 식당 리스트
-restaurant_list = driver.find_elements(By.CSS_SELECTOR, 'li.UEzoS.rTjJo')
-# 페이지 리스트
-next_btn = driver.find_elements(By.CSS_SELECTOR, '.zRM9F> a')
-
-# dictionary 생성
-restaurant_dict = {'맛집정보': []}
-# 시작시간
-start = time.time()
-print('[크롤링 시작...]')
-
-# 크롤링 (페이지 리스트 만큼)
-# for btn in range(len(next_btn))[1:]:  # next_btn[0] = 이전 페이지 버튼 무시 -> [1]부터 시작
-    # restaurant_list = driver.find_elements(By.CSS_SELECTOR, 'li.UEzoS.rTjJo')
-    # names = driver.find_elements(By.CSS_SELECTOR, '.TYaxT')  # (3) 장소명
-    # types = driver.find_elements(By.CSS_SELECTOR, '.KCMnt')  # (4) 장소 유형
-
-empty = '//*[@id="_pcmap_list_scroll_container"]' # 크롤링할 데이터가 있는 영역 중, 빈 공간을 입력해 뒀습니다
-
-for i in range(1, 51): # 1~50번째 상호를 순회하도록 했습니다
-    nm = ['NA'] # 상호가 저장될 변수
-    addr = ['NA'] # 주소가 저장될 변수
-    driver.find_element(By.XPATH, empty)
-
-    names = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/a[1]/div/div/span[1]')
-#                                                                         /html/body/div[3]/div/div/div/div[2]/div[1]/div[1]/span[1]
-# /html/body/div[3]/div/div/div/div[2]/div[1]/div[1]/span[1]
-    names += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/a[1]/div/div/span[1]')
-
-    addr = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/div/div/div')
-    addr += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/div/div/span/a/span[1]')
-
-    types = driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div[2]/a[2]/div/div/span[1]')
-    types += driver.find_elements(By.XPATH, f'//*[@id="_pcmap_list_scroll_container"]/ul/li[{i}]/div[1]/div/a[2]/div/div/span[1]')
-
-    # for data in range(len(restaurant_list)):  # 식당 리스트 만큼
-    #     print(data)
-    #     try:
-    #         # 지번, 도로명 초기화
-    #         jibun_address = ''
-    #         road_address = ''
-    #
-    #         # (3)식당명 가져오기
-    #         restaurant_name = names[data].text
-    #         print(restaurant_name)
-    #
-    #         # (4) 유형
-    #         restaurant_type = types[data].text
-    #         print(restaurant_type)
-    #
-    #         # (5) 주소 버튼 누르기
-    #         address_buttons = driver.find_element_by_xpath(By.CSS_SELECTOR, '.Q8Zql > a')
-    #         address_buttons.__getitem__(data).click()
-    #
-    #         # 로딩 기다리기
-    #         sleep(1)
-    #
-    #         # (6) 주소 눌렀을 때 도로명, 지번 나오는 div
-    #         addr = driver.find_elements(By.CSS_SELECTOR, '.jg1ED > div')
-    #
-    #         # 지번만 있는 경우
-    #         if len(addr) == 1 and addr.__getitem__(0).text[0:2] == '지번':
-    #             jibun = addr.__getitem__(0).text
-    #             last_index = jibun.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
-    #             jibun_address = jibun[2:last_index]
-    #             print("지번 주소:", jibun_address)
-    #
-    #         # 도로명만 있는 경우
-    #         elif len(addr) == 1 and addr.__getitem__(0).text[0:2] == '도로':
-    #             road = addr.__getitem__(0).text
-    #             last_index = road.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
-    #             road_address = road[3:last_index]
-    #             print("도로명 주소:", road_address)
-    #
-    #         # 도로명, 지번 둘 다 있는 경우
-    #         else:
-    #             # 도로명
-    #             road = addr.__getitem__(0).text
-    #             road_address = road[3:(len(road) - 2)]
-    #             print("도로명 주소:", road_address)
-    #
-    #             # 지번
-    #             jibun = addr.__getitem__(1).text
-    #             last_index = jibun.find('복사우\n')  # 복사버튼, 우편번호 제외하기 위함
-    #             jibun_address = jibun[2:last_index]
-    #             print("지번 주소:", jibun_address)
-    #
-    #         # dict에 데이터 집어넣기
-    #         dict_temp = {
-    #             'name': parking_name,
-    #             'parking_type': parking_type,
-    #             'road_address': road_address,
-    #             'jibun_address': jibun_address
-    #         }
-    #
-    #         parking_dict['주차장정보'].append(dict_temp)
-    #         print(f'{parking_name} ...완료')
-    #
-    #         sleep(1)
-    #
-    #     except Exception as e:
-    #         print(e)
-    #         print('ERROR!' * 3)
-    #
-    #         # dict에 데이터 집어넣기
-    #         dict_temp = {
-    #             'name': parking_name,
-    #             'parking_type': parking_type,
-    #             'road_address': road_address,
-    #             'jibun_address': jibun_address
-    #         }
-    #
-    #         parking_dict['주차장정보'].append(dict_temp)
-    #         print(f'{parking_name} ...완료')
-    #
-    #         sleep(1)
-
-    # 다음 페이지 버튼 누를 수 없으면 종료
-    # if not next_btn[-1].is_enabled():
-    #     break
-    #
-    # if names[-1]:  # 마지막 주차장일 경우 다음버튼 클릭
-    #     next_btn[-1].click()
-    #
-    #     sleep(2)
-    #
-    # else:
-    #     print('페이지 인식 못함')
-    #     break
-
-print('[데이터 수집 완료]\n소요 시간 :', time.time() - start)
-driver.quit()  # 작업이 끝나면 창을 닫는다.
-
-# # json 파일로 저장
-# with open('data/store_data.json', 'w', encoding='utf-8') as f:
-#     json.dump(parking_dict, f, indent=4, ensure_ascii=False)
-print('=================')
-print(names)
-print('=================')
-print(types)
-print('=================')
-print(addr)
